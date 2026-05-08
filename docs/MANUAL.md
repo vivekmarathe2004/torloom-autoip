@@ -23,19 +23,19 @@ sudo ./setup.sh
 Open interactive console:
 
 ```bash
-auto-ip
+torloom
 ```
 
 Run one manual rotation:
 
 ```bash
-auto-ip-rotate --once
+torloom rotate --once
 ```
 
 Validate config:
 
 ```bash
-auto-ip-rotate --validate-config
+torloom rotate --validate-config
 ```
 
 Start daemon:
@@ -92,7 +92,7 @@ Menu actions:
 Non-interactive diagnostics:
 
 ```bash
-auto-ip doctor
+torloom doctor
 ```
 
 Legacy compatibility:
@@ -151,7 +151,7 @@ sudo tail -f /var/log/auto-ip/rotations.log
 Run:
 
 ```bash
-auto-ip-leaktest
+torloom leaktest
 ```
 
 Checks:
@@ -173,7 +173,7 @@ Rotation unchanged:
 
 - This can happen naturally in Tor
 - Increase interval range
-- Retry with `auto-ip-rotate --once`
+- Retry with `torloom rotate --once`
 - Respect `NEWNYM_MIN_COOLDOWN` (minimum 10 seconds)
 
 Permission denied on auth cookie:

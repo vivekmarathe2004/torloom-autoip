@@ -12,6 +12,7 @@ COUNTRY_FILE="${TOR_DROPIN_DIR}/auto-ip-country.conf"
 SYSCTL_FILE="/etc/sysctl.d/99-auto-ip-ipv6.conf"
 SERVICE_TARGET="/etc/systemd/system/auto-ip-rotator.service"
 CLI_TARGET="/usr/local/bin/auto-ip"
+MAIN_TARGET="/usr/local/bin/torloom"
 DEPS=(tor curl jq proxychains4 nftables netcat-openbsd)
 
 step() {
@@ -125,15 +126,16 @@ install_dependencies() {
 }
 
 install_project_files() {
-  install -m 0755 "${ROOT_DIR}/setup.sh" "${INSTALL_DIR}/setup.sh"
-  install -m 0755 "${ROOT_DIR}/change_tor_ip.sh" "${INSTALL_DIR}/change_tor_ip.sh"
-  install -m 0755 "${ROOT_DIR}/healthcheck.sh" "${INSTALL_DIR}/healthcheck.sh"
-  install -m 0755 "${ROOT_DIR}/leak_test.sh" "${INSTALL_DIR}/leak_test.sh"
-  install -m 0755 "${ROOT_DIR}/auto_ip_cli.sh" "${INSTALL_DIR}/auto_ip_cli.sh"
-  install -m 0755 "${ROOT_DIR}/ip-changer.sh" "${INSTALL_DIR}/ip-changer.sh"
-  install -m 0755 "${ROOT_DIR}/uninstall.sh" "${INSTALL_DIR}/uninstall.sh"
+  install -d -m 0755 "${INSTALL_DIR}/app" "${INSTALL_DIR}/lib" "${INSTALL_DIR}/firewall" "${INSTALL_DIR}/configs" "${INSTALL_DIR}/systemd" "${INSTALL_DIR}/docs" "${INSTALL_DIR}/docs/assets"
 
-  install -d -m 0755 "${INSTALL_DIR}/lib" "${INSTALL_DIR}/firewall" "${INSTALL_DIR}/configs" "${INSTALL_DIR}/systemd" "${INSTALL_DIR}/docs"
+  install -m 0755 "${ROOT_DIR}/setup.sh" "${INSTALL_DIR}/setup.sh"
+  install -m 0755 "${ROOT_DIR}/torloom.sh" "${INSTALL_DIR}/torloom.sh"
+  install -m 0755 "${ROOT_DIR}/app/change_tor_ip.sh" "${INSTALL_DIR}/app/change_tor_ip.sh"
+  install -m 0755 "${ROOT_DIR}/app/healthcheck.sh" "${INSTALL_DIR}/app/healthcheck.sh"
+  install -m 0755 "${ROOT_DIR}/app/leak_test.sh" "${INSTALL_DIR}/app/leak_test.sh"
+  install -m 0755 "${ROOT_DIR}/app/auto_ip_cli.sh" "${INSTALL_DIR}/app/auto_ip_cli.sh"
+  install -m 0755 "${ROOT_DIR}/app/ip-changer.sh" "${INSTALL_DIR}/app/ip-changer.sh"
+  install -m 0755 "${ROOT_DIR}/uninstall.sh" "${INSTALL_DIR}/uninstall.sh"
 
   install -m 0644 "${ROOT_DIR}/lib/common.sh" "${INSTALL_DIR}/lib/common.sh"
   install -m 0755 "${ROOT_DIR}/firewall/apply_killswitch.sh" "${INSTALL_DIR}/firewall/apply_killswitch.sh"
@@ -145,6 +147,7 @@ install_project_files() {
   install -m 0644 "${ROOT_DIR}/systemd/auto-ip-rotator.service" "${INSTALL_DIR}/systemd/auto-ip-rotator.service"
   install -m 0644 "${ROOT_DIR}/README.md" "${INSTALL_DIR}/README.md"
   install -m 0644 "${ROOT_DIR}/docs/MANUAL.md" "${INSTALL_DIR}/docs/MANUAL.md"
+  install -m 0644 "${ROOT_DIR}/docs/assets/autoip-sticker.svg" "${INSTALL_DIR}/docs/assets/autoip-sticker.svg"
 }
 
 verify_installation() {
@@ -154,7 +157,7 @@ verify_installation() {
 
   echo "[9/9] Running post-install verification..."
   run_verify_check "Tor service is active" systemctl is-active --quiet "${tor_service}" || failures=1
-  run_verify_check "Config preflight passes" "${INSTALL_DIR}/change_tor_ip.sh" --validate-config || failures=1
+  run_verify_check "Config preflight passes" "${INSTALL_DIR}/app/change_tor_ip.sh" --validate-config || failures=1
   run_verify_check "Tor SOCKS proxy works" curl --socks5-hostname 127.0.0.1:9050 -fsS --max-time 20 https://api.ipify.org || failures=1
   run_verify_check "DNS path works via Tor" curl --socks5-hostname 127.0.0.1:9050 -fsS --max-time 20 https://dnsleaktest.com || failures=1
   if grep -q '^ENABLE_FIREWALL=1' "${CONFIG_DIR}/auto-ip.conf"; then
@@ -213,11 +216,12 @@ cp "${ROOT_DIR}/configs/proxychains4.conf.template" /etc/proxychains4.conf
 
 step 7 "Installing and enabling service..."
 cp "${ROOT_DIR}/systemd/auto-ip-rotator.service" "${SERVICE_TARGET}"
-ln -sf "${INSTALL_DIR}/change_tor_ip.sh" /usr/local/bin/auto-ip-rotate
-ln -sf "${INSTALL_DIR}/healthcheck.sh" /usr/local/bin/auto-ip-health
-ln -sf "${INSTALL_DIR}/leak_test.sh" /usr/local/bin/auto-ip-leaktest
-ln -sf "${INSTALL_DIR}/auto_ip_cli.sh" "${CLI_TARGET}"
-ln -sf "${INSTALL_DIR}/ip-changer.sh" /usr/local/bin/ip-changer
+ln -sf "${INSTALL_DIR}/torloom.sh" "${MAIN_TARGET}"
+ln -sf "${INSTALL_DIR}/torloom.sh" "${CLI_TARGET}"
+ln -sf "${INSTALL_DIR}/torloom.sh" /usr/local/bin/ip-changer
+ln -sf "${INSTALL_DIR}/torloom.sh" /usr/local/bin/auto-ip-rotate
+ln -sf "${INSTALL_DIR}/torloom.sh" /usr/local/bin/auto-ip-health
+ln -sf "${INSTALL_DIR}/torloom.sh" /usr/local/bin/auto-ip-leaktest
 systemctl daemon-reload
 TOR_SERVICE="$(detect_tor_service)"
 systemctl enable "${TOR_SERVICE}" || true
@@ -256,7 +260,8 @@ echo
 echo "Setup complete."
 echo "Start service:  sudo systemctl start auto-ip-rotator"
 echo "View logs:      sudo journalctl -u auto-ip-rotator -f"
-echo "One-shot run:   sudo /usr/local/bin/auto-ip-rotate --once"
+echo "One-shot run:   torloom rotate --once"
 echo "Interactive UI: auto-ip"
 echo "Legacy UI:      ip-changer"
+echo "Main command:   torloom"
 echo "Proxy browser:  proxychains4 firefox --private-window"

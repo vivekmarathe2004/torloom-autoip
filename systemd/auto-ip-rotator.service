@@ -5,8 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStartPre=/opt/auto-ip/change_tor_ip.sh --validate-config
-ExecStart=/opt/auto-ip/change_tor_ip.sh
+ExecStartPre=/opt/auto-ip/app/change_tor_ip.sh --validate-config
+ExecStart=/opt/auto-ip/app/change_tor_ip.sh
 Restart=always
 RestartSec=5
 User=root

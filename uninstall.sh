@@ -21,7 +21,7 @@ if [[ -x /opt/auto-ip/firewall/remove_killswitch.sh ]]; then
 fi
 
 echo "Removing installed files..."
-rm -f /usr/local/bin/auto-ip /usr/local/bin/ip-changer /usr/local/bin/auto-ip-rotate /usr/local/bin/auto-ip-health /usr/local/bin/auto-ip-leaktest
+rm -f /usr/local/bin/torloom /usr/local/bin/auto-ip /usr/local/bin/ip-changer /usr/local/bin/auto-ip-rotate /usr/local/bin/auto-ip-health /usr/local/bin/auto-ip-leaktest
 rm -rf /opt/auto-ip
 rm -rf /etc/auto-ip
 rm -f /etc/tor/torrc.d/auto-ip.conf /etc/tor/torrc.d/auto-ip-country.conf

@@ -3,8 +3,9 @@ set -euo pipefail
 
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_PATH}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # shellcheck disable=SC1091
-source "${SCRIPT_DIR}/lib/common.sh"
+source "${ROOT_DIR}/lib/common.sh"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -189,7 +190,7 @@ run_doctor() {
 }
 
 open_manual() {
-  local manual="${SCRIPT_DIR}/docs/MANUAL.md"
+  local manual="${ROOT_DIR}/docs/MANUAL.md"
   if [[ -f "${manual}" ]]; then
     ${PAGER:-less} "${manual}"
   else

@@ -63,23 +63,23 @@ sudo ./setup.sh
 
 ```bash
 # Interactive console
-auto-ip
+torloom
 
-# Legacy-compatible entry
+# Compatibility entries
+auto-ip
 ip-changer
 
 # One-shot rotation
-auto-ip-rotate --once
+torloom rotate --once
 
 # Validate config only
-auto-ip-rotate --validate-config
+torloom rotate --validate-config
 
 # Full diagnostics
-auto-ip doctor
-ip-changer doctor
+torloom doctor
 
 # Leak test
-auto-ip-leaktest
+torloom leaktest
 ```
 
 ## Service Control
@@ -100,12 +100,13 @@ flowchart TD
   A[setup.sh] --> B[Config + Tor drop-ins]
   A --> C[systemd unit install]
   C --> D[auto-ip-rotator.service]
-  D --> E[change_tor_ip.sh]
+  D --> E[app/change_tor_ip.sh]
   E --> F[lib/common.sh]
   E --> G[Tor ControlPort NEWNYM]
   E --> H[SOCKS IP verification]
-  I[auto_ip_cli.sh] --> J[healthcheck.sh]
-  I --> K[leak_test.sh]
+  I[torloom.sh] --> I2[app/auto_ip_cli.sh]
+  I2 --> J[app/healthcheck.sh]
+  I2 --> K[app/leak_test.sh]
   I --> L[doctor diagnostics]
   M[firewall scripts] --> N[nftables kill switch]
 ```
@@ -114,13 +115,10 @@ flowchart TD
 
 ```text
 torloom-autoip/
+├── torloom.sh
 ├── setup.sh
-├── auto_ip_cli.sh
-├── ip-changer.sh
-├── change_tor_ip.sh
-├── healthcheck.sh
-├── leak_test.sh
 ├── uninstall.sh
+├── app/
 ├── configs/
 ├── firewall/
 ├── lib/

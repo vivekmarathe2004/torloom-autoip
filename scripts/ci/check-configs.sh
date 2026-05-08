@@ -55,10 +55,10 @@ TOR_CONTROL_PORT=0
 NEWNYM_MIN_COOLDOWN=5
 EOF
 
-CONFIG_FILE="${tmpdir}/canonical.conf" LOG_DIR="${tmpdir}" bash ./change_tor_ip.sh --validate-config
-CONFIG_FILE="${tmpdir}/alias.conf" LOG_DIR="${tmpdir}" bash ./change_tor_ip.sh --validate-config
+CONFIG_FILE="${tmpdir}/canonical.conf" LOG_DIR="${tmpdir}" bash ./app/change_tor_ip.sh --validate-config
+CONFIG_FILE="${tmpdir}/alias.conf" LOG_DIR="${tmpdir}" bash ./app/change_tor_ip.sh --validate-config
 
-if CONFIG_FILE="${tmpdir}/invalid.conf" LOG_DIR="${tmpdir}" bash ./change_tor_ip.sh --validate-config; then
+if CONFIG_FILE="${tmpdir}/invalid.conf" LOG_DIR="${tmpdir}" bash ./app/change_tor_ip.sh --validate-config; then
   echo "invalid config unexpectedly passed validation"
   exit 1
 fi

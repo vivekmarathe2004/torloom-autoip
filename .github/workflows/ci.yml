@@ -31,13 +31,14 @@ jobs:
       - name: Executable permissions check
         run: |
           required=(
+            torloom.sh
             setup.sh
             uninstall.sh
-            change_tor_ip.sh
-            healthcheck.sh
-            leak_test.sh
-            auto_ip_cli.sh
-            ip-changer.sh
+            app/change_tor_ip.sh
+            app/healthcheck.sh
+            app/leak_test.sh
+            app/auto_ip_cli.sh
+            app/ip-changer.sh
             firewall/apply_killswitch.sh
             firewall/remove_killswitch.sh
           )
