@@ -1,0 +1,10 @@
+# Runtime logs
+logs/*.log
+
+# Local artifacts
+.DS_Store
+*.swp
+*.swo
+
+# Optional local notes
+notes.txt

@@ -1,0 +1,14 @@
+# Managed by auto-ip
+# SOCKS + control
+SOCKSPort 9050
+ControlPort 9051
+CookieAuthentication 1
+CookieAuthFileGroupReadable 1
+
+# DNS leak resistance
+DNSPort 9053
+AutomapHostsOnResolve 1
+
+# Circuit behavior
+MaxCircuitDirtiness 30
+NewCircuitPeriod 30

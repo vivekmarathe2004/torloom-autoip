@@ -1,0 +1,18 @@
+#!/usr/sbin/nft -f
+
+table inet auto_ip {
+  chain input {
+    type filter hook input priority 0; policy drop;
+    iif "lo" accept
+    ct state established,related accept
+    tcp dport { 9050, 9051, 9053 } ip saddr 127.0.0.1 accept
+    udp dport 9053 ip saddr 127.0.0.1 accept
+  }
+
+  chain output {
+    type filter hook output priority 0; policy drop;
+    oif "lo" accept
+    ct state established,related accept
+    meta skuid "debian-tor" accept
+  }
+}

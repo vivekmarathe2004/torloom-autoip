@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  bash-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Bash syntax check
+        run: |
+          mapfile -t scripts < <(find . -type f -name "*.sh" ! -path "./.git/*")
+          for s in "${scripts[@]}"; do
+            bash -n "$s"
+          done
+
+      - name: ShellCheck
+        run: |
+          mapfile -t scripts < <(find . -type f -name "*.sh" ! -path "./.git/*")
+          shellcheck -x "${scripts[@]}"
+
+      - name: Executable permissions check
+        run: |
+          required=(
+            setup.sh
+            uninstall.sh
+            change_tor_ip.sh
+            healthcheck.sh
+            leak_test.sh
+            auto_ip_cli.sh
+            ip-changer.sh
+            firewall/apply_killswitch.sh
+            firewall/remove_killswitch.sh
+          )
+          for f in "${required[@]}"; do
+            test -x "$f" || { echo "Missing executable bit: $f"; exit 1; }
+          done
+
+      - name: Config sanity checks
+        run: |
+          bash scripts/ci/check-configs.sh
