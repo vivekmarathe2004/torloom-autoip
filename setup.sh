@@ -65,7 +65,11 @@ EOF
 }
 
 detect_tor_service() {
-  if systemctl list-unit-files 2>/dev/null | grep -q "^tor@default.service"; then
+  if systemctl is-active --quiet tor@default 2>/dev/null; then
+    echo "tor@default"
+  elif systemctl is-active --quiet tor 2>/dev/null; then
+    echo "tor"
+  elif systemctl list-unit-files 2>/dev/null | grep -q "^tor@default.service"; then
     echo "tor@default"
   elif systemctl list-unit-files 2>/dev/null | grep -q "^tor.service"; then
     echo "tor"
@@ -103,6 +107,19 @@ run_verify_check() {
     return 0
   fi
   echo "    [FAIL] ${description}"
+  return 1
+}
+
+wait_for_tor_socks() {
+  local timeout=30
+  local elapsed=0
+  while (( elapsed < timeout )); do
+    if curl --socks5-hostname 127.0.0.1:9050 -fsS --max-time 10 https://api.ipify.org >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+    ((elapsed++))
+  done
   return 1
 }
 
@@ -158,6 +175,8 @@ verify_installation() {
   echo "[9/9] Running post-install verification..."
   run_verify_check "Tor service is active" systemctl is-active --quiet "${tor_service}" || failures=1
   run_verify_check "Config preflight passes" "${INSTALL_DIR}/app/change_tor_ip.sh" --validate-config || failures=1
+  run_verify_check "Tor config syntax passes" tor --verify-config || failures=1
+  run_verify_check "Tor SOCKS warm-up complete" wait_for_tor_socks || failures=1
   run_verify_check "Tor SOCKS proxy works" curl --socks5-hostname 127.0.0.1:9050 -fsS --max-time 20 https://api.ipify.org || failures=1
   run_verify_check "DNS path works via Tor" curl --socks5-hostname 127.0.0.1:9050 -fsS --max-time 20 https://dnsleaktest.com || failures=1
   if grep -q '^ENABLE_FIREWALL=1' "${CONFIG_DIR}/auto-ip.conf"; then
@@ -224,15 +243,24 @@ ln -sf "${INSTALL_DIR}/torloom.sh" /usr/local/bin/auto-ip-health
 ln -sf "${INSTALL_DIR}/torloom.sh" /usr/local/bin/auto-ip-leaktest
 systemctl daemon-reload
 TOR_SERVICE="$(detect_tor_service)"
-systemctl enable "${TOR_SERVICE}" || true
-systemctl restart "${TOR_SERVICE}" || true
+if ! tor --verify-config >/dev/null 2>&1; then
+  echo "Invalid Tor configuration detected. Run: tor --verify-config"
+  exit 1
+fi
+if systemctl is-active --quiet "${TOR_SERVICE}"; then
+  systemctl restart "${TOR_SERVICE}"
+else
+  systemctl start "${TOR_SERVICE}"
+fi
 systemctl enable auto-ip-rotator.service
 
 step 8 "Enabling firewall kill switch..."
 if grep -q '^ENABLE_FIREWALL=1' "${CONFIG_DIR}/auto-ip.conf"; then
-  "${ROOT_DIR}/firewall/apply_killswitch.sh"
   systemctl enable nftables || true
-  systemctl restart nftables || true
+  if ! systemctl is-active --quiet nftables; then
+    systemctl start nftables || true
+  fi
+  "${ROOT_DIR}/firewall/apply_killswitch.sh"
 else
   echo "Firewall kill switch disabled by config; skipping apply."
 fi

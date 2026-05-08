@@ -116,9 +116,9 @@ show_status() {
   "${SCRIPT_DIR}/healthcheck.sh" || true
 }
 
-rotate_once() {
-  echo -e "${YELLOW}Triggering one rotation...${NC}"
-  "${SCRIPT_DIR}/change_tor_ip.sh" --once || true
+rotate_live() {
+  echo -e "${YELLOW}Starting continuous rotation in foreground. Press Ctrl+C to stop.${NC}"
+  "${SCRIPT_DIR}/change_tor_ip.sh" || true
 }
 
 start_service() {
@@ -216,7 +216,7 @@ menu_loop() {
   while true; do
     banner
     echo "1) Health status"
-    echo "2) Rotate Tor IP now"
+    echo "2) Start continuous rotation (foreground)"
     echo "3) Start auto-rotation service"
     echo "4) Stop auto-rotation service"
     echo "5) Show recent logs"
@@ -230,7 +230,7 @@ menu_loop() {
 
     case "${opt}" in
       1) show_status ;;
-      2) rotate_once ;;
+      2) rotate_live ;;
       3) start_service ;;
       4) stop_service ;;
       5) tail_logs ;;

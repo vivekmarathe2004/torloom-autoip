@@ -114,10 +114,12 @@ detect_tor_service() {
     return 0
   fi
 
-  if systemctl list-unit-files 2>/dev/null | grep -q "^tor@default.service"; then
+  if systemctl is-active --quiet tor@default 2>/dev/null; then
     TOR_SERVICE_CACHE="tor@default"
-  elif systemctl list-unit-files 2>/dev/null | grep -q "^tor.service"; then
+  elif systemctl is-active --quiet tor 2>/dev/null; then
     TOR_SERVICE_CACHE="tor"
+  elif systemctl list-unit-files 2>/dev/null | grep -q "^tor@default.service"; then
+    TOR_SERVICE_CACHE="tor@default"
   else
     TOR_SERVICE_CACHE="tor"
   fi
@@ -126,16 +128,14 @@ detect_tor_service() {
 }
 
 tor_is_active() {
-  local tor_service
-  tor_service="$(detect_tor_service)"
-  systemctl is-active --quiet "${tor_service}"
+  systemctl is-active --quiet tor@default 2>/dev/null || systemctl is-active --quiet tor 2>/dev/null
 }
 
 restart_tor() {
   local tor_service
   tor_service="$(detect_tor_service)"
   if is_root; then
-    systemctl restart "${tor_service}"
+    systemctl restart "${tor_service}" >/dev/null 2>&1 || systemctl restart tor >/dev/null 2>&1 || systemctl restart tor@default >/dev/null 2>&1
   else
     return 1
   fi
@@ -165,6 +165,17 @@ get_ip() {
   fi
 
   ip="$(curl --socks5-hostname "${TOR_SOCKS_ADDR}" -fsS --max-time 25 https://ifconfig.me/ip 2>/dev/null || true)"
+  if [[ -n "${ip}" ]]; then
+    printf "%s\n" "${ip}"
+    return 0
+  fi
+
+  ip="$(curl --socks5-hostname "${TOR_SOCKS_ADDR}" -fsS --max-time 25 https://check.torproject.org/api/ip 2>/dev/null || true)"
+  if [[ -n "${ip}" ]] && command_exists jq; then
+    printf "%s\n" "$(printf "%s" "${ip}" | jq -r '.IP // empty' 2>/dev/null || true)"
+    return 0
+  fi
+
   printf "%s\n" "${ip}"
 }
 
