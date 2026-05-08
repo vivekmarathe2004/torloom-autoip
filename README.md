@@ -1,34 +1,119 @@
-﻿# TorLoom AutoIP
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=230&color=0:0B132B,40:1C2541,70:3A506B,100:5BC0BE&text=TorLoom%20AutoIP&fontColor=EAF4FF&fontSize=48&fontAlignY=38&desc=Interactive%20Tor%20IP%20Rotation%20Suite%20for%20Kali&descAlignY=59&animation=fadeIn" alt="TorLoom AutoIP Banner" />
+</p>
 
-`TorLoom AutoIP` is a Bash-first Tor IP rotator for Kali Linux with privacy hardening, health checks, leak resistance, and interactive operations.
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&pause=1100&color=5BC0BE&center=true&vCenter=true&random=false&width=900&lines=Privacy+Rotation+%E2%80%A2+Leak+Guard+%E2%80%A2+Health+Ops;Dual+Mode+Support%3A+auto-ip+and+ip-changer;Doctor+Diagnostics+%E2%80%A2+Kill+Switch+%E2%80%A2+Systemd+Hardened" alt="Typing Animation" />
+</p>
 
-## Unique Repo Identity
+<p align="center">
+  <img src="docs/assets/autoip-sticker.svg" width="120" alt="AutoIP Sticker" />
+</p>
 
-- Suggested GitHub repo name: `torloom-autoip-kali`
-- One-line description:
-  - `Interactive Tor IP rotation toolkit for Kali with DNS/IPv6 leak protection, kill switch, health checks, and systemd automation.`
+<p align="center">
+  <a href="https://github.com/vivekmarathe2004/torloom-autoip/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/vivekmarathe2004/torloom-autoip/ci.yml?style=for-the-badge&label=CI&color=16a34a" alt="CI" /></a>
+  <img src="https://img.shields.io/badge/Kali-Linux-0ea5e9?style=for-the-badge&logo=kalilinux&logoColor=white" alt="Kali Linux" />
+  <img src="https://img.shields.io/badge/Language-Bash-f59e0b?style=for-the-badge&logo=gnubash&logoColor=white" alt="Bash" />
+  <img src="https://img.shields.io/badge/Firewall-nftables-2563eb?style=for-the-badge" alt="nftables" />
+  <img src="https://img.shields.io/badge/Mode-Root%20%2B%20User-a855f7?style=for-the-badge" alt="Root and User mode" />
+  <img src="https://img.shields.io/badge/Status-Active-22c55e?style=for-the-badge" alt="Status" />
+</p>
 
-## Core Features
+<p align="center">
+  <b>TorLoom AutoIP</b> is a practical privacy automation project for Kali: rotate Tor identities safely, detect failures early, and keep operational controls simple.
+</p>
 
-- Randomized rotation intervals
-- Tor health monitoring and auto-restart
-- IP-change verification after each rotation
-- DNS leak mitigation in Tor config
-- IPv6 leak mitigation (persistent + runtime)
-- nftables kill switch
-- Proxychains auto-configuration
-- User mode and root mode support
-- Geo-IP logging (IP, country, ASN)
-- Network auto-recovery hooks
-- Hardened systemd service
-- Country exit-node selection (US/DE/NL/JP/random)
-- Interactive command center (`auto-ip`)
-- Legacy compatibility entrypoint (`ip-changer.sh`) and service alias (`change-tor-ip`)
+## Why This Project
+
+Most Tor IP changers stop at `NEWNYM` and `sleep`.  
+TorLoom AutoIP adds operational safety layers:
+
+- Config validation before runtime
+- Single-instance lock protection
+- NEWNYM cooldown awareness
+- Service hardening with systemd
+- Built-in doctor diagnostics
+- DNS/IPv6 leak guard and kill-switch integration
+
+## Feature Matrix
+
+| Capability | Included | Notes |
+|---|---|---|
+| Randomized rotation interval | Yes | Default 30-90s |
+| Config preflight (`--validate-config`) | Yes | Fails fast with clear error |
+| Single-instance lock | Yes | `flock` + PID fallback |
+| NEWNYM cooldown control | Yes | Minimum 10s enforced |
+| Tor health monitoring | Yes | Auto-restart + checks |
+| Leak tests | Yes | DNS + IPv6 + Tor connectivity |
+| Kill switch | Yes | nftables policy |
+| Doctor diagnostics | Yes | `auto-ip doctor` |
+| Legacy compatibility | Yes | `ip-changer` + `change-tor-ip` alias |
+| CI checks | Yes | ShellCheck + syntax + config sanity |
+
+## Quick Start
+
+```bash
+git clone https://github.com/vivekmarathe2004/torloom-autoip.git
+cd torloom-autoip
+sudo chmod +x *.sh firewall/*.sh
+sudo ./setup.sh
+```
+
+## Command Deck
+
+```bash
+# Interactive console
+auto-ip
+
+# Legacy-compatible entry
+ip-changer
+
+# One-shot rotation
+auto-ip-rotate --once
+
+# Validate config only
+auto-ip-rotate --validate-config
+
+# Full diagnostics
+auto-ip doctor
+ip-changer doctor
+
+# Leak test
+auto-ip-leaktest
+```
+
+## Service Control
+
+```bash
+sudo systemctl start auto-ip-rotator
+sudo systemctl stop auto-ip-rotator
+sudo systemctl status auto-ip-rotator
+
+# Legacy alias
+sudo systemctl status change-tor-ip
+```
+
+## Architecture
+
+```mermaid
+flowchart TD
+  A[setup.sh] --> B[Config + Tor drop-ins]
+  A --> C[systemd unit install]
+  C --> D[auto-ip-rotator.service]
+  D --> E[change_tor_ip.sh]
+  E --> F[lib/common.sh]
+  E --> G[Tor ControlPort NEWNYM]
+  E --> H[SOCKS IP verification]
+  I[auto_ip_cli.sh] --> J[healthcheck.sh]
+  I --> K[leak_test.sh]
+  I --> L[doctor diagnostics]
+  M[firewall scripts] --> N[nftables kill switch]
+```
 
 ## Project Layout
 
 ```text
-torloom-autoip-kali/
+torloom-autoip/
 ├── setup.sh
 ├── auto_ip_cli.sh
 ├── ip-changer.sh
@@ -37,92 +122,11 @@ torloom-autoip-kali/
 ├── leak_test.sh
 ├── uninstall.sh
 ├── configs/
-│   ├── auto-ip.conf.template
-│   ├── proxychains4.conf.template
-│   └── torrc.template
 ├── firewall/
-│   ├── apply_killswitch.sh
-│   ├── remove_killswitch.sh
-│   └── tor-killswitch.nft
 ├── lib/
-│   └── common.sh
 ├── docs/
-│   └── MANUAL.md
-├── systemd/
-│   └── auto-ip-rotator.service
-└── README.md
-```
-
-## Install
-
-```bash
-sudo chmod +x *.sh firewall/*.sh
-sudo ./setup.sh
-```
-
-## Daily Use
-
-Open interactive console:
-
-```bash
-auto-ip
-```
-
-Legacy command (compatible):
-
-```bash
-ip-changer
-```
-
-Legacy doctor command:
-
-```bash
-ip-changer doctor
-```
-
-Manual rotation:
-
-```bash
-auto-ip-rotate --once
-```
-
-Validate config only:
-
-```bash
-auto-ip-rotate --validate-config
-```
-
-Run diagnostics:
-
-```bash
-auto-ip doctor
-```
-
-Leak test:
-
-```bash
-auto-ip-leaktest
-```
-
-Service control:
-
-```bash
-sudo systemctl start auto-ip-rotator
-sudo systemctl stop auto-ip-rotator
-sudo systemctl status auto-ip-rotator
-```
-
-Legacy service alias:
-
-```bash
-sudo systemctl start change-tor-ip
-sudo systemctl status change-tor-ip
-```
-
-Private browser launch:
-
-```bash
-proxychains4 firefox --private-window
+├── scripts/ci/
+└── systemd/
 ```
 
 ## Configuration
@@ -133,18 +137,19 @@ System config:
 /etc/auto-ip/auto-ip.conf
 ```
 
-User config fallback:
+User fallback config:
 
 ```text
 ~/.config/auto-ip/auto-ip.conf
 ```
 
-Tor drop-ins managed by setup:
+Key options:
 
-```text
-/etc/tor/torrc.d/auto-ip.conf
-/etc/tor/torrc.d/auto-ip-country.conf
-```
+- `INTERVAL_MIN`
+- `INTERVAL_MAX`
+- `MAX_CHANGE_RETRIES`
+- `NEWNYM_MIN_COOLDOWN`
+- `ENABLE_FIREWALL`
 
 ## Logs
 
@@ -162,14 +167,42 @@ User fallback logs:
 ~/.local/state/auto-ip/logs/
 ```
 
-## Full Manual
+## Troubleshooting
 
-Read the complete interactive and operational manual:
+<details>
+<summary>Tor service inactive</summary>
 
-```text
-docs/MANUAL.md
+```bash
+sudo systemctl restart tor
+sudo systemctl restart tor@default
 ```
+
+</details>
+
+<details>
+<summary>Control cookie permission error</summary>
+
+- Ensure `CookieAuthFileGroupReadable 1` is set in Tor config.
+- Ensure user is in Tor group (`debian-tor` or `tor`).
+- Re-login after group update.
+
+</details>
+
+<details>
+<summary>No internet after kill switch</summary>
+
+```bash
+sudo /opt/auto-ip/firewall/remove_killswitch.sh
+sudo systemctl restart nftables
+```
+
+</details>
+
+## Docs
+
+- Full operator manual: [`docs/MANUAL.md`](docs/MANUAL.md)
 
 ## Legal and Safety
 
-Use this project only in legal and authorized environments. Tor IP rotation does not by itself prevent fingerprinting or account-linkage mistakes.
+Use only in legal and authorized environments.  
+Tor rotation does not eliminate browser fingerprinting or account-linkage risk.
