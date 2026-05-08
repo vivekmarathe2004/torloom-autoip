@@ -29,21 +29,21 @@ if ! command -v apt-get >/dev/null 2>&1; then
 fi
 
 pick_country() {
-  echo
-  echo "Select exit country profile:"
-  echo "1) USA"
-  echo "2) Germany"
-  echo "3) Netherlands"
-  echo "4) Japan"
-  echo "5) Random (default Tor behavior)"
+  echo >&2
+  echo "Select exit country profile:" >&2
+  echo "1) USA" >&2
+  echo "2) Germany" >&2
+  echo "3) Netherlands" >&2
+  echo "4) Japan" >&2
+  echo "5) Random (default Tor behavior)" >&2
   read -r -p "Choice [1-5]: " selection
 
   case "${selection:-5}" in
-    1) echo "US" ;;
-    2) echo "DE" ;;
-    3) echo "NL" ;;
-    4) echo "JP" ;;
-    *) echo "RANDOM" ;;
+    1) printf "%s\n" "US" ;;
+    2) printf "%s\n" "DE" ;;
+    3) printf "%s\n" "NL" ;;
+    4) printf "%s\n" "JP" ;;
+    *) printf "%s\n" "RANDOM" ;;
   esac
 }
 
@@ -185,6 +185,14 @@ mkdir -p "${TOR_DROPIN_DIR}"
 cp "${ROOT_DIR}/configs/torrc.template" "${TOR_DROPIN_FILE}"
 
 EXIT_COUNTRY="$(pick_country)"
+EXIT_COUNTRY="${EXIT_COUNTRY//$'\r'/}"
+case "${EXIT_COUNTRY}" in
+  US|DE|NL|JP|RANDOM) ;;
+  *)
+    echo "Invalid country selection output: ${EXIT_COUNTRY}"
+    exit 1
+    ;;
+esac
 write_country_file "${EXIT_COUNTRY}"
 
 cp "${ROOT_DIR}/configs/auto-ip.conf.template" "${CONFIG_DIR}/auto-ip.conf"
